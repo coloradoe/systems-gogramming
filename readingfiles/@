@@ -1,0 +1,55 @@
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+
+type Reader interface {
+	Read(p []byte) (n int, err error)
+}
+
+func main() {
+
+	ReadAllAtOnce(string(os.Args[1]))
+    UsingBuffers(string(os.Args[1]))
+
+}
+
+func ReadAllAtOnce(str string) string {
+	if str == "" {
+		return "Please specify a path."
+	}
+	b, err := ioutil.ReadFile(str)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	fmt.Println(string(b))
+	return string(b)
+}
+
+func UsingBuffers(str string) string{
+    if str == ""{
+        return "Please specify a file."
+    }
+    f, err := os.Open(str)
+    if err != nil{
+        fmt.Println("Error:", err)
+        return string(err)
+    }
+    defer f.Close() // We ensure close to avoid leaks
+
+    var (
+        b = make([]byte, 16)
+    )
+    for n :=0; err == nil; {
+        n, err = f.Read(b)
+        if err == nil{
+            fmt.Println(string(b[:n])) // Only print what's been read
+        }
+    }
+    if err != nil && err != io.EOF { // We expect an EOF
+        fmt.Println("\n\nError:", err)
+    }
+}
